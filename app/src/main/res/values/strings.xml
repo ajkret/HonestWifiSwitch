@@ -1,8 +1,8 @@
 <resources>
-    <string name="app_name">HonestWifiSwitch</string>
-    <string name="appwidget_text">EXAMPLE</string>
+    <string name="app_name">Honest Wifi Switch</string>
+    <string name="appwidget_text">Wifi!</string>
     <string name="add_widget">Add widget</string>
-    <string name="title_activity_no">NoActivity</string>
+    <string name="title_activity_no">No Activity</string>
 
     <string name="hello_world">Hello world!</string>
     <string name="action_settings">Settings</string>

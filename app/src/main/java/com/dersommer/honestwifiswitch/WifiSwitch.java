@@ -25,10 +25,10 @@ public class WifiSwitch extends AppWidgetProvider {
     @Override
     public void onUpdate(Context context, AppWidgetManager manager, int[] appWidgetIds) {
         // There may be multiple widgets active, so update all of them
-//        final int N = appWidgetIds.length;
-//        for (int i = 0; i < N; i++) {
-//            updateAppWidget(context, manager, appWidgetIds[i]);
-//        }
+        final int N = appWidgetIds.length;
+        for (int i = 0; i < N; i++) {
+            updateAppWidget(context, manager, appWidgetIds[i]);
+        }
     }
 
 
