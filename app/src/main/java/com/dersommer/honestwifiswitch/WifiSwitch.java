@@ -9,8 +9,11 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.net.wifi.WifiManager;
-import android.widget.Button;
+import android.os.Handler;
 import android.widget.RemoteViews;
+
+import java.util.Timer;
+import java.util.TimerTask;
 
 
 /**
@@ -20,10 +23,19 @@ public class WifiSwitch extends AppWidgetProvider {
 
     BroadcastReceiver receiver;
 
+    // Broadcast receiver does not work very well, at some point
+    // it stops sending notifications :-(
+    static Timer timerUpdateState = null;
+    static final Handler handler = new Handler();
+
     private static final String WIFI_CLICKED = "myOnClick";
 
     @Override
     public void onUpdate(Context context, AppWidgetManager manager, int[] appWidgetIds) {
+        if(timerUpdateState==null) {
+            createUpdateStateTimer();
+        }
+
         // There may be multiple widgets active, so update all of them
         final int N = appWidgetIds.length;
         for (int i = 0; i < N; i++) {
@@ -34,6 +46,12 @@ public class WifiSwitch extends AppWidgetProvider {
 
     @Override
     public void onEnabled(Context context) {
+
+        // Create timer
+        if(timerUpdateState==null) {
+            createUpdateStateTimer();
+        }
+
         IntentFilter filter = new IntentFilter();
         //filter.addAction("android.net.wifi.STATE_CHANGE");
         filter.addAction("android.net.wifi.WIFI_STATE_CHANGED"); // http://java-knowhow.blogspot.com.br/2011/11/android-broadcast-receiver-on-wifi.html
@@ -85,6 +103,48 @@ public class WifiSwitch extends AppWidgetProvider {
         appWidgetManager.updateAppWidget(appWidgetId, views);
     }
 
+    void createUpdateStateTimer() {
+
+        if(timerUpdateState!=null)
+            return;
+        timerUpdateState = new Timer();
+
+
+        TimerTask task = new TimerTask() {
+            @Override
+            public void run() {
+                handler.post(new Runnable() {
+                    public void run() {
+                        Context context = MyApplication.getAppContext();
+                        if(context==null)
+                            return;
+
+                        AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(context);
+
+                        RemoteViews remoteViews = new RemoteViews(context.getPackageName(), R.layout.wifi_switch);
+                        ComponentName            thisWidget = new ComponentName(context, WifiSwitch.class);
+
+                        WifiManager wifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
+
+                        // Update views
+                        AppWidgetManager manager = AppWidgetManager.getInstance(context);
+                        int[] appWidgetIds = manager.getAppWidgetIds(thisWidget);
+                        final int N = appWidgetIds.length;
+                        for (int i = 0; i < N; i++) {
+                            if (!wifiManager.isWifiEnabled())
+                                remoteViews.setImageViewResource(R.id.imageButton, R.drawable.wifi_on);
+                            else
+                                remoteViews.setImageViewResource(R.id.imageButton, R.drawable.wifi_off);
+                        }
+
+                    }
+                });
+            }
+        };
+
+        timerUpdateState.schedule(task, 30000, 10000);
+    }
+
     @Override
     /**
      * Receive click events to toogle wifi
@@ -92,6 +152,9 @@ public class WifiSwitch extends AppWidgetProvider {
     public void onReceive(Context context, Intent intent) {
         super.onReceive(context, intent);
 
+        if(timerUpdateState==null) {
+            createUpdateStateTimer();
+        }
         if (WIFI_CLICKED.equals(intent.getAction())) {
 
             AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(context);
